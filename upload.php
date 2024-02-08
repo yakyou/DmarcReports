@@ -191,6 +191,13 @@ foreach ($reportRecords as $num => $reportRecord) {
 		}
 		$reportRecordsCols .= $col;
 		$reportRecordsVals .= "'" . $db->escapeString($val) . "'";
+		if ($col == 'row_source_ip') {
+			$hostname = gethostbyaddr($val);
+			$reportRecordsCols .= ', ';
+			$reportRecordsVals .= ', ';
+			$reportRecordsCols .= 'row_souece_hostname';
+			$reportRecordsVals .= "'" . $db->escapeString($hostname) . "'";
+		}
 	}
 	$sql = 'INSERT INTO report_records (' . $reportRecordsCols . ') VALUES (' . $reportRecordsVals . ')';
 	if (!$db->exec($sql)) {

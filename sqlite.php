@@ -42,6 +42,7 @@ while ($row = $results->fetchArray()) {
 			report_metadata_report_id, 
 			num,
 			row_source_ip, 
+			row_souece_hostname, /* 独自追加 */
 			row_count, 
 			row_policy_evaluated_disposition, 
 			row_policy_evaluated_dkim, 
