@@ -41,7 +41,6 @@ $reports = $db->query('
 
 <table>
 	<tr>
-		<th colspan="1" rowspan="3">version</th>
 		<th colspan="6" rowspan="1">report_metadata</th>
 		<th colspan="8" rowspan="2">policy_published</th>
 		<th colspan="8" rowspan="1">row</th>
@@ -91,7 +90,6 @@ $reports = $db->query('
 <?php 
 while ($report = $reports->fetchArray()) {
 	echo '<tr>';
-	echo '<td>' . h($report['version']) . '</td>';
 	echo '<td>' . h($report['report_metadata_org_name']) . '</td>';
 	echo '<td>' . h($report['report_metadata_email']) . '</td>';
 	echo '<td>' . h($report['report_metadata_extra_contact_info']) . '</td>';
