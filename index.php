@@ -94,8 +94,8 @@ while ($report = $reports->fetchArray()) {
 	echo '<td>' . h($report['report_metadata_email']) . '</td>';
 	echo '<td>' . h($report['report_metadata_extra_contact_info']) . '</td>';
 	echo '<td>' . h($report['report_metadata_report_id']) . '</td>';
-	echo '<td>' . h($report['report_metadata_date_range_begin']) . '</td>';
-	echo '<td>' . h($report['report_metadata_date_range_end']) . '</td>';
+	echo '<td>' . date("m-d H:i", $report['report_metadata_date_range_begin']) . '</td>';
+	echo '<td>' . date("m-d H:i", $report['report_metadata_date_range_end']) . '</td>';
 	echo '<td>' . h($report['policy_published_domain']) . '</td>';
 	echo '<td>' . h($report['policy_published_adkim']) . '</td>';
 	echo '<td>' . h($report['policy_published_aspf']) . '</td>';
