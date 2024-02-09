@@ -43,13 +43,12 @@ $reports = $db->query('
 	<tr>
 		<th colspan="2" rowspan="2">report_metadata</th>
 		<th colspan="8" rowspan="2">policy_published</th>
-		<th colspan="8" rowspan="1">row</th>
+		<th colspan="7" rowspan="1">row</th>
 		<th colspan="3" rowspan="2">identifiers</th>
 		<th colspan="7" rowspan="1">auth_results</th>
 	</tr>
 	<tr>
 		<th colspan="1" rowspan="2">source_ip</th>
-		<th colspan="1" rowspan="2">souece_hostname</th>
 		<th colspan="1" rowspan="2">count</th>
 		<th colspan="5" rowspan="1">policy_evaluated</th>
 		<th colspan="4" rowspan="1">dkim</th>
@@ -99,8 +98,7 @@ while ($report = $reports->fetchArray()) {
 	echo '<td>' . h($report['policy_published_pct']) . '</td>';
 	echo '<td>' . h($report['policy_published_np']) . '</td>';
 	echo '<td>' . h($report['policy_published_fo']) . '</td>';
-	echo '<td>' . h($report['row_source_ip']) . '</td>';
-	echo '<td>' . h($report['row_souece_hostname']) . '</td>';
+	echo '<td title="' . h($report['row_souece_hostname']) . '">' . h($report['row_source_ip']) . '</td>';
 	echo '<td>' . h($report['row_count']) . '</td>';
 	echo '<td>' . h($report['row_policy_evaluated_disposition']) . '</td>';
 	echo '<td>' . h($report['row_policy_evaluated_dkim']) . '</td>';
