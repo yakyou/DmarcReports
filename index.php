@@ -41,18 +41,13 @@ $reports = $db->query('
 
 <table>
 	<tr>
-		<th colspan="6" rowspan="1">report_metadata</th>
+		<th colspan="5" rowspan="2">report_metadata</th>
 		<th colspan="8" rowspan="2">policy_published</th>
 		<th colspan="8" rowspan="1">row</th>
 		<th colspan="3" rowspan="2">identifiers</th>
 		<th colspan="7" rowspan="1">auth_results</th>
 	</tr>
 	<tr>
-		<th colspan="1" rowspan="2">org_name</th>
-		<th colspan="1" rowspan="2">email</th>
-		<th colspan="1" rowspan="2">extra_contact_info</th>
-		<th colspan="1" rowspan="2">report_id</th>
-		<th colspan="2" rowspan="1">date_range</th>
 		<th colspan="1" rowspan="2">source_ip</th>
 		<th colspan="1" rowspan="2">souece_hostname</th>
 		<th colspan="1" rowspan="2">count</th>
@@ -61,8 +56,11 @@ $reports = $db->query('
 		<th colspan="3" rowspan="1">spf</th>
 	</tr>
 	<tr>
-		<th>begin</th>
-		<th>end</th>
+		<th>org_name</th>
+		<th>email</th>
+		<th>extra_contact_info</th>
+		<th>report_id</th>
+		<th>date_range</th>
 		<th>domain</th>
 		<th>adkim</th>
 		<th>aspf</th>
@@ -94,8 +92,7 @@ while ($report = $reports->fetchArray()) {
 	echo '<td>' . h($report['report_metadata_email']) . '</td>';
 	echo '<td>' . h($report['report_metadata_extra_contact_info']) . '</td>';
 	echo '<td>' . h($report['report_metadata_report_id']) . '</td>';
-	echo '<td>' . date("m-d H:i", $report['report_metadata_date_range_begin']) . '</td>';
-	echo '<td>' . date("m-d H:i", $report['report_metadata_date_range_end']) . '</td>';
+	echo '<td>' . date("m-d H:i", $report['report_metadata_date_range_begin']) . ' – ' . date("m-d H:i", $report['report_metadata_date_range_end']) . '</td>';
 	echo '<td>' . h($report['policy_published_domain']) . '</td>';
 	echo '<td>' . h($report['policy_published_adkim']) . '</td>';
 	echo '<td>' . h($report['policy_published_aspf']) . '</td>';
