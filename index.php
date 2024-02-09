@@ -98,7 +98,7 @@ while ($report = $reports->fetchArray()) {
 	echo '<td>' . h($report['policy_published_pct']) . '</td>';
 	echo '<td>' . h($report['policy_published_np']) . '</td>';
 	echo '<td>' . h($report['policy_published_fo']) . '</td>';
-	echo '<td title="' . h($report['row_souece_hostname']) . '">' . h($report['row_source_ip']) . '</td>';
+	echo '<td title="' . h($report['row_source_ip']) . '">' . h($report['row_souece_hostname']) . '</td>';
 	echo '<td>' . h($report['row_count']) . '</td>';
 	echo '<td>' . h($report['row_policy_evaluated_disposition']) . '</td>';
 	echo '<td>' . h($report['row_policy_evaluated_dkim']) . '</td>';
