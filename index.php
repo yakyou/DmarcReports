@@ -41,7 +41,7 @@ $reports = $db->query('
 
 <table>
 	<tr>
-		<th colspan="5" rowspan="2">report_metadata</th>
+		<th colspan="3" rowspan="2">report_metadata</th>
 		<th colspan="8" rowspan="2">policy_published</th>
 		<th colspan="8" rowspan="1">row</th>
 		<th colspan="3" rowspan="2">identifiers</th>
@@ -57,8 +57,6 @@ $reports = $db->query('
 	</tr>
 	<tr>
 		<th>org_name</th>
-		<th>email</th>
-		<th>extra_contact_info</th>
 		<th>report_id</th>
 		<th>date_range</th>
 		<th>domain</th>
@@ -88,9 +86,11 @@ $reports = $db->query('
 <?php 
 while ($report = $reports->fetchArray()) {
 	echo '<tr>';
-	echo '<td>' . h($report['report_metadata_org_name']) . '</td>';
-	echo '<td>' . h($report['report_metadata_email']) . '</td>';
-	echo '<td>' . h($report['report_metadata_extra_contact_info']) . '</td>';
+	$orgNameTitle = 'email: ' . h($report['report_metadata_email']);
+	if (!empty($report['report_metadata_extra_contact_info'])) {
+		$orgNameTitle .= '&#13;&#10;extra_contact_info: ' . h($report['report_metadata_extra_contact_info']);
+	}
+	echo '<td title="' . $orgNameTitle . '">' . h($report['report_metadata_org_name']) . '</td>';
 	echo '<td>' . h($report['report_metadata_report_id']) . '</td>';
 	echo '<td>' . date("m-d H:i", $report['report_metadata_date_range_begin']) . ' to ' . date("m-d H:i", $report['report_metadata_date_range_end']) . '</td>';
 	echo '<td>' . h($report['policy_published_domain']) . '</td>';
