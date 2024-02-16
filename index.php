@@ -9,7 +9,10 @@ $reports = $db->query('
 	INNER JOIN report_records 
 	ON reports.report_metadata_org_name = report_records.report_metadata_org_name 
 	AND reports.report_metadata_report_id = report_records.report_metadata_report_id
-	ORDER BY reports.report_metadata_date_range_begin DESC, report_records.num
+	ORDER BY reports.report_metadata_date_range_begin DESC
+	, reports.report_metadata_org_name
+	, reports.report_metadata_report_id
+	, report_records.num
 ');
 ?><!DOCTYPE html>
 <html>
