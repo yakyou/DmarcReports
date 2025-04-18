@@ -12,6 +12,7 @@ $reports = $db->query('
 	ORDER BY reports.report_metadata_date_range_begin DESC
 	, reports.report_metadata_org_name
 	, reports.report_metadata_report_id
+	, report_records.row_source_ip
 	, report_records.num
 ');
 ?><!DOCTYPE html>
