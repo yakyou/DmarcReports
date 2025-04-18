@@ -85,22 +85,36 @@ $reports = $db->query('
 		<th>result</th>
 	</tr>
 <?php 
+$recordsCount = array();
+while ($report = $reports->fetchArray()) {
+	if (empty($recordsCount[$report['report_metadata_org_name']][$report['report_metadata_report_id']])) {
+		$recordsCount[$report['report_metadata_org_name']][$report['report_metadata_report_id']] = 1;
+	} else {
+		$recordsCount[$report['report_metadata_org_name']][$report['report_metadata_report_id']]++;
+	}
+}
+$beforeRow = array();
+$beforeRow['report_metadata_org_name'] = '';
+$beforeRow['report_metadata_report_id'] = '';
 while ($report = $reports->fetchArray()) {
 	echo '<tr>';
-	$orgNameTitle = 'email: ' . h($report['report_metadata_email']);
-	if (!empty($report['report_metadata_extra_contact_info'])) {
-		$orgNameTitle .= '&#13;&#10;extra_contact_info: ' . h($report['report_metadata_extra_contact_info']);
+	if (!($beforeRow['report_metadata_org_name'] == $report['report_metadata_org_name'] && $beforeRow['report_metadata_report_id'] == $report['report_metadata_report_id'])) {
+		$rowspan = $recordsCount[$report['report_metadata_org_name']][$report['report_metadata_report_id']];
+		$orgNameTitle = 'email: ' . h($report['report_metadata_email']);
+		if (!empty($report['report_metadata_extra_contact_info'])) {
+			$orgNameTitle .= '&#13;&#10;extra_contact_info: ' . h($report['report_metadata_extra_contact_info']);
+		}
+		echo '<td rowspan="' . $rowspan . '" title="' . $orgNameTitle . '">' . h($report['report_metadata_org_name']) . '</td>';
+		echo '<td rowspan="' . $rowspan . '" title="report_id: ' . h($report['report_metadata_report_id']) . '">' . date("m-d H:i", $report['report_metadata_date_range_begin']) . ' to ' . date("m-d H:i", $report['report_metadata_date_range_end']) . '</td>';
+		echo '<td rowspan="' . $rowspan . '">' . h($report['policy_published_domain']) . '</td>';
+		echo '<td rowspan="' . $rowspan . '">' . h($report['policy_published_adkim']) . '</td>';
+		echo '<td rowspan="' . $rowspan . '">' . h($report['policy_published_aspf']) . '</td>';
+		echo '<td rowspan="' . $rowspan . '">' . h($report['policy_published_p']) . '</td>';
+		echo '<td rowspan="' . $rowspan . '">' . h($report['policy_published_sp']) . '</td>';
+		echo '<td rowspan="' . $rowspan . '">' . h($report['policy_published_pct']) . '</td>';
+		echo '<td rowspan="' . $rowspan . '">' . h($report['policy_published_np']) . '</td>';
+		echo '<td rowspan="' . $rowspan . '">' . h($report['policy_published_fo']) . '</td>';	
 	}
-	echo '<td title="' . $orgNameTitle . '">' . h($report['report_metadata_org_name']) . '</td>';
-	echo '<td title="report_id: ' . h($report['report_metadata_report_id']) . '">' . date("m-d H:i", $report['report_metadata_date_range_begin']) . ' to ' . date("m-d H:i", $report['report_metadata_date_range_end']) . '</td>';
-	echo '<td>' . h($report['policy_published_domain']) . '</td>';
-	echo '<td>' . h($report['policy_published_adkim']) . '</td>';
-	echo '<td>' . h($report['policy_published_aspf']) . '</td>';
-	echo '<td>' . h($report['policy_published_p']) . '</td>';
-	echo '<td>' . h($report['policy_published_sp']) . '</td>';
-	echo '<td>' . h($report['policy_published_pct']) . '</td>';
-	echo '<td>' . h($report['policy_published_np']) . '</td>';
-	echo '<td>' . h($report['policy_published_fo']) . '</td>';
 	echo '<td title="' . h($report['row_source_ip']) . '">' . h($report['row_souece_hostname']) . '</td>';
 	echo '<td>' . h($report['row_count']) . '</td>';
 	echo '<td>' . h($report['row_policy_evaluated_disposition']) . '</td>';
@@ -119,6 +133,7 @@ while ($report = $reports->fetchArray()) {
 	echo '<td>' . h($report['auth_results_spf_scope']) . '</td>';
 	echo '<td>' . h($report['auth_results_spf_result']) . '</td>';
 	echo '</tr>';
+	$beforeRow = $report;
 }
 ?>
 </table>
