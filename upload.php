@@ -1,5 +1,6 @@
 <?php
 //zipやgzのままアップロード
+require_once('ini.php');
 require_once('sqlite.php');
 
 //zipやgzの中にあるxmlファイルの内容を取り出す
@@ -192,7 +193,7 @@ foreach ($reportRecords as $num => $reportRecord) {
 		$reportRecordsCols .= $col;
 		$reportRecordsVals .= "'" . $db->escapeString($val) . "'";
 		if ($col == 'row_source_ip') {
-			$hostname = gethostbyaddr($val);
+			$hostname = gethostbyaddr2($val);
 			$reportRecordsCols .= ', ';
 			$reportRecordsVals .= ', ';
 			$reportRecordsCols .= 'row_souece_hostname';
@@ -221,4 +222,23 @@ function isString($value) {
 		}
 	}
 	return true;
+}
+
+function gethostbyaddr2($ip) {
+	global $ipinfotoken;
+	if (empty($ipinfotoken)) {
+		return gethostbyaddr($ip);
+	} else {
+		//ip情報の取得
+		$ipinfo = file_get_contents('https://ipinfo.io/' . $ip . '?token=' . $ipinfotoken);
+		if ($ipinfo === false) {
+			return $ip;
+		}
+		$json = json_decode($ipinfo);
+		if (!empty($json->hostname)) {
+			return $json->hostname;
+		} else {
+			return $ip;
+		}
+	}
 }
