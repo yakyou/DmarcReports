@@ -1,7 +1,18 @@
 <?php
+require_once('ini.php');
 require_once('sqlite.php');
 function h($string) {
 	return htmlspecialchars($string);
+}
+function isMySource($ip) {
+	global $mysourceips;
+	$ret = '';
+	if (!empty($mysourceips)) {
+		if (in_array($ip, $mysourceips)) {
+			$ret = '&#128522;';
+		}
+	}
+	return $ret;
 }
 $reports = $db->query('
 	SELECT * 
@@ -116,7 +127,7 @@ while ($report = $reports->fetchArray()) {
 		echo '<td rowspan="' . $rowspan . '">' . h($report['policy_published_np']) . '</td>';
 		echo '<td rowspan="' . $rowspan . '">' . h($report['policy_published_fo']) . '</td>';	
 	}
-	echo '<td title="' . h($report['row_source_ip']) . '">' . h($report['row_souece_hostname']) . '</td>';
+	echo '<td title="' . h($report['row_source_ip']) . '">' . isMySource($report['row_source_ip']) . h($report['row_souece_hostname']) . '</td>';
 	echo '<td>' . h($report['row_count']) . '</td>';
 	echo '<td>' . h($report['row_policy_evaluated_disposition']) . '</td>';
 	echo '<td>' . h($report['row_policy_evaluated_dkim']) . '</td>';
