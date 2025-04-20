@@ -39,6 +39,9 @@ $reports = $db->query('
 		border: solid 1px;
 		padding: 1px 3px;
 	}
+	td{
+		vertical-align: top;
+	}
 	table {
 		border-collapse:  collapse;
 		white-space: nowrap;
