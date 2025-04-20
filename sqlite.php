@@ -67,3 +67,27 @@ while ($row = $results->fetchArray()) {
 		}	
 	}
 }
+$results = $db->query("SELECT COUNT(*) FROM sqlite_master WHERE TYPE='table' AND name='ipinfos'");
+while ($row = $results->fetchArray()) {
+	if ($row[0] == 0) {
+		$ret = $db->exec('CREATE TABLE ipinfos (
+			ip, 
+			hostname, 
+			city, 
+			region, 
+			country, 
+			loc, 
+			org, 
+			postal, 
+			timezone, 
+			readme, 
+			created, 
+			modified, 
+			PRIMARY KEY(ip)
+		)');
+		if (!$ret) {
+			echo 'ipinfosテーブルの作成に失敗しました。';
+			exit;
+		}
+	}
+}

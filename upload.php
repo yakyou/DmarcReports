@@ -169,7 +169,7 @@ foreach ($report as $col => $val) {
 $sql = 'INSERT INTO reports (' . $reportsCols . ') VALUES (' . $reportsVals . ')';
 if (!$db->exec($sql)) {
 	$db->exec('rollback');
-	echo '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>DBの書込に失敗しました。</body></html>';
+	echo '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>DB(reports)の書込に失敗しました。</body></html>';
 	exit;
 }
 foreach ($reportRecords as $num => $reportRecord) {
@@ -203,7 +203,7 @@ foreach ($reportRecords as $num => $reportRecord) {
 	$sql = 'INSERT INTO report_records (' . $reportRecordsCols . ') VALUES (' . $reportRecordsVals . ')';
 	if (!$db->exec($sql)) {
 		$db->exec('rollback');
-		echo '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>DBの書込に失敗しました。</body></html>';
+		echo '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>DB(report_records)の書込に失敗しました。</body></html>';
 		exit;
 	}
 }
@@ -226,15 +226,206 @@ function isString($value) {
 
 function gethostbyaddr2($ip) {
 	global $ipinfotoken;
+	global $db;
 	if (empty($ipinfotoken)) {
 		return gethostbyaddr($ip);
 	} else {
+		//保存済みの情報の呼び出し
+		$mode = 'insert'; // or update or none
+		$savedipinfo = array();
+		$dbipinfos = $db->query("SELECT * FROM ipinfos WHERE ip = '" . $db->escapeString($ip) . "'");
+		while ($dbipinfo = $dbipinfos->fetchArray()) {
+			$savedipinfo = $dbipinfo;
+			$mode = 'update';
+		}
 		//ip情報の取得
 		$ipinfo = file_get_contents('https://ipinfo.io/' . $ip . '?token=' . $ipinfotoken);
 		if ($ipinfo === false) {
 			return $ip;
 		}
 		$json = json_decode($ipinfo);
+
+		if ($mode == 'insert') {
+			//新規IP情報保存
+			$ipinfoCols = "ip";
+			$ipinfoVals = "'" . $db->escapeString($json->ip) . "'";
+			if (!empty($json->hostname)) {
+				$ipinfoCols .= ", hostname";
+				$ipinfoVals .= ", '" . $db->escapeString($json->hostname) . "'";
+			}
+			if (!empty($json->city)) {
+				$ipinfoCols .= ", city";
+				$ipinfoVals .= ", '" . $db->escapeString($json->city) . "'";
+			}
+			if (!empty($json->region)) {
+				$ipinfoCols .= ", region";
+				$ipinfoVals .= ", '" . $db->escapeString($json->region) . "'";
+			}
+			if (!empty($json->country)) {
+				$ipinfoCols .= ", country";
+				$ipinfoVals .= ", '" . $db->escapeString($json->country) . "'";
+			}
+			if (!empty($json->loc)) {
+				$ipinfoCols .= ", loc";
+				$ipinfoVals .= ", '" . $db->escapeString($json->loc) . "'";
+			}
+			if (!empty($json->org)) {
+				$ipinfoCols .= ", org";
+				$ipinfoVals .= ", '" . $db->escapeString($json->org) . "'";
+			}
+			if (!empty($json->postal)) {
+				$ipinfoCols .= ", postal";
+				$ipinfoVals .= ", '" . $db->escapeString($json->postal) . "'";
+			}
+			if (!empty($json->timezone)) {
+				$ipinfoCols .= ", timezone";
+				$ipinfoVals .= ", '" . $db->escapeString($json->timezone) . "'";
+			}
+			if (!empty($json->readme)) {
+				$ipinfoCols .= ", readme";
+				$ipinfoVals .= ", '" . $db->escapeString($json->readme) . "'";
+			}
+			$ipinfoCols .= ", created";
+			$ipinfoVals .= ", '" . date('Y-m-d H:i:s') . "'";
+			$ipinfoCols .= ", modified";
+			$ipinfoVals .= ", '" . date('Y-m-d H:i:s') . "'";
+			$sql = 'INSERT INTO ipinfos (' . $ipinfoCols . ') VALUES (' . $ipinfoVals . ')';
+			if (!$db->exec($sql)) {
+				$db->exec('rollback');
+				echo '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>DB(ipinfos)の書込に失敗しました。</body></html>';
+				exit;
+			}
+		} else if ($mode == 'update') {
+			//既存IP情報更新
+			$sqlCols = '';
+			if (empty($savedipinfo['hostname'])) {
+				if (!empty($json->hostname)) {
+					$sqlCols .= "hostname = '" . $db->escapeString($json->hostname) . "', ";
+				}
+			} else {
+				if (empty($json->hostname)) {
+					$sqlCols .= "hostname = NULL, ";
+				} else {
+					if ($savedipinfo['hostname'] != $json->hostname) {
+						$sqlCols .= "hostname = '" . $db->escapeString($json->hostname) . "', ";
+					}
+				}
+			}
+			if (empty($savedipinfo['city'])) {
+				if (!empty($json->city)) {
+					$sqlCols .= "city = '" . $db->escapeString($json->city) . "', ";
+				}
+			} else {
+				if (empty($json->city)) {
+					$sqlCols .= "city = NULL, ";
+				} else {
+					if ($savedipinfo['city'] != $json->city) {
+						$sqlCols .= "city = '" . $db->escapeString($json->city) . "', ";
+					}
+				}
+			}
+			if (empty($savedipinfo['region'])) {
+				if (!empty($json->region)) {
+					$sqlCols .= "region = '" . $db->escapeString($json->region) . "', ";
+				}
+			} else {
+				if (empty($json->region)) {
+					$sqlCols .= "region = NULL, ";
+				} else {
+					if ($savedipinfo['region'] != $json->region) {
+						$sqlCols .= "region = '" . $db->escapeString($json->region) . "', ";
+					}
+				}
+			}
+			if (empty($savedipinfo['country'])) {
+				if (!empty($json->country)) {
+					$sqlCols .= "country = '" . $db->escapeString($json->country) . "', ";
+				}
+			} else {
+				if (empty($json->country)) {
+					$sqlCols .= "country = NULL, ";
+				} else {
+					if ($savedipinfo['country'] != $json->country) {
+						$sqlCols .= "country = '" . $db->escapeString($json->country) . "', ";
+					}
+				}
+			}
+			if (empty($savedipinfo['loc'])) {
+				if (!empty($json->loc)) {
+					$sqlCols .= "loc = '" . $db->escapeString($json->loc) . "', ";
+				}
+			} else {
+				if (empty($json->loc)) {
+					$sqlCols .= "loc = NULL, ";
+				} else {
+					if ($savedipinfo['loc'] != $json->loc) {
+						$sqlCols .= "loc = '" . $db->escapeString($json->loc) . "', ";
+					}
+				}
+			}
+			if (empty($savedipinfo['org'])) {
+				if (!empty($json->org)) {
+					$sqlCols .= "org = '" . $db->escapeString($json->org) . "', ";
+				}
+			} else {
+				if (empty($json->org)) {
+					$sqlCols .= "org = NULL, ";
+				} else {
+					if ($savedipinfo['org'] != $json->org) {
+						$sqlCols .= "org = '" . $db->escapeString($json->org) . "', ";
+					}
+				}
+			}
+			if (empty($savedipinfo['postal'])) {
+				if (!empty($json->postal)) {
+					$sqlCols .= "postal = '" . $db->escapeString($json->postal) . "', ";
+				}
+			} else {
+				if (empty($json->postal)) {
+					$sqlCols .= "postal = NULL, ";
+				} else {
+					if ($savedipinfo['postal'] != $json->postal) {
+						$sqlCols .= "postal = '" . $db->escapeString($json->postal) . "', ";
+					}
+				}
+			}
+			if (empty($savedipinfo['timezone'])) {
+				if (!empty($json->timezone)) {
+					$sqlCols .= "timezone = '" . $db->escapeString($json->timezone) . "', ";
+				}
+			} else {
+				if (empty($json->timezone)) {
+					$sqlCols .= "timezone = NULL, ";
+				} else {
+					if ($savedipinfo['timezone'] != $json->timezone) {
+						$sqlCols .= "timezone = '" . $db->escapeString($json->timezone) . "', ";
+					}
+				}
+			}
+			if (empty($savedipinfo['readme'])) {
+				if (!empty($json->readme)) {
+					$sqlCols .= "readme = '" . $db->escapeString($json->readme) . "', ";
+				}
+			} else {
+				if (empty($json->readme)) {
+					$sqlCols .= "readme = NULL, ";
+				} else {
+					if ($savedipinfo['readme'] != $json->readme) {
+						$sqlCols .= "readme = '" . $db->escapeString($json->readme) . "', ";
+					}
+				}
+			}
+			if (!empty($sqlCols)) {
+				//更新すべき内容があれば更新
+				$sqlCols .= "modified = '" . date('Y-m-d H:i:s') . "'";
+				$sql = "UPDATE ipinfos SET " . $sqlCols . " WHERE ip = '" . $db->escapeString($json->ip) . "'";
+				if (!$db->exec($sql)) {
+					$db->exec('rollback');
+					echo '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>DB(ipinfos)の書込に失敗しました。</body></html>';
+					exit;
+				}
+			}
+		}
 		if (!empty($json->hostname)) {
 			return $json->hostname;
 		} else {
