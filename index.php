@@ -1,9 +1,11 @@
 <?php
 require_once('ini.php');
 require_once('sqlite.php');
+
 function h($string) {
 	return htmlspecialchars($string);
 }
+
 function isMySource($ip) {
 	global $mysourceips;
 	$ret = '';
@@ -14,6 +16,7 @@ function isMySource($ip) {
 	}
 	return $ret;
 }
+
 //国コード(ISO 3166-1)を国旗のemojiにします
 function code2flag($countryCode) {
 	$ret = '';
@@ -47,7 +50,20 @@ function code2flag($countryCode) {
 	}
 	return $countryCode;
 }
-$reports = $db->query('
+
+$domains = $db->query('
+	SELECT DISTINCT reports.policy_published_domain
+	FROM reports 
+	ORDER BY reports.policy_published_domain
+');
+
+$orgnames = $db->query('
+	SELECT DISTINCT reports.report_metadata_org_name
+	FROM reports 
+	ORDER BY reports.report_metadata_org_name
+');
+
+$query1 = '
 	SELECT * 
 	FROM reports 
 	INNER JOIN report_records 
@@ -55,15 +71,63 @@ $reports = $db->query('
 	AND reports.report_metadata_report_id = report_records.report_metadata_report_id
 	LEFT OUTER JOIN ipinfos 
 	ON report_records.row_source_ip = ipinfos.ip 
+';
+$query2 = '';
+$queryWhere = '';
+if (!empty($_GET['report_metadata_org_name'])) {
+	if (!empty($queryWhere)) {
+		$queryWhere .= ' AND ';
+	}
+	$queryWhere .= ' reports.report_metadata_org_name = \'' . $db->escapeString($_GET['report_metadata_org_name']) . '\' ';
+}
+if (!empty($_GET['policy_published_domain'])) {
+	if (!empty($queryWhere)) {
+		$queryWhere .= ' AND ';
+	}
+	$queryWhere .= ' reports.policy_published_domain = \'' . $db->escapeString($_GET['policy_published_domain']) . '\' ';
+}
+if (!empty($_GET['policy_evaluated'])) {
+	if (!empty($queryWhere)) {
+		$queryWhere .= ' AND ';
+	}
+	if ($_GET['policy_evaluated'] == 'fail') {
+		$queryWhere .= ' report_records.row_policy_evaluated_dkim = \'fail\' AND report_records.row_policy_evaluated_spf = \'fail\' ';
+	} else if ($_GET['policy_evaluated'] == 'pass') {
+		$queryWhere .= ' NOT (report_records.row_policy_evaluated_dkim = \'fail\' AND report_records.row_policy_evaluated_spf = \'fail\') ';
+	}
+}
+if (!empty($_GET['source_ip']) && $_GET['source_ip'] == 'mine') {
+	if (!empty($mysourceips)) {
+		if (!empty($queryWhere)) {
+			$queryWhere .= ' AND ';
+		}
+		$ipList = '';
+		foreach ($mysourceips as $mysourceip) {
+			if (!empty($ipList)) {
+				$ipList .= ', ';
+			}
+			$ipList .= "'" . $db->escapeString($mysourceip) . "'";
+		}
+		$queryWhere .= ' report_records.row_source_ip IN (';
+		$queryWhere .= $ipList;
+		$queryWhere .= ') ';
+	}
+}
+if (!empty($queryWhere)) {
+	$query2 = ' WHERE ' . $queryWhere;
+}
+$query3 = '
 	ORDER BY reports.report_metadata_date_range_begin DESC
 	, reports.report_metadata_org_name
 	, reports.report_metadata_report_id
 	, ipinfos.country
 	, report_records.row_source_ip
 	, report_records.num
-');
+';
+$reports = $db->query($query1 . $query2 . $query3);
+
 ?><!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
 <meta charset="utf-8">
 <script src="https://cdn.jsdelivr.net/npm/@twemoji/api@latest/dist/twemoji.min.js" crossorigin="anonymous"></script>
@@ -97,6 +161,82 @@ $reports = $db->query('
 <input name="userfile" type="file" />
 <input type="submit" value="ファイルを送信" />
 </form>
+<br />
+
+<?php
+	$current = '';
+	foreach ($_GET as $key => $val) {
+		if (empty($current)) {
+			$current .= '?';
+		} else {
+			$current .= '&';
+		}
+		$current .= h($key) . '=' . h($val);
+	}
+	if (empty($current)) {
+		$current .= './?';
+	} else {
+		$current = './' . $current . '&';
+	}
+
+	echo 'メール受信サービスによる絞り込み : ';
+	if (empty($_GET['report_metadata_org_name'])) {
+		$orgnameList = '';
+		while ($orgname = $orgnames->fetchArray()) {
+			if (!empty($orgnameList)) {
+				$orgnameList .= ' / ';
+			}
+			$orgnameList .= '<a href="' . $current . 'report_metadata_org_name=' . h($orgname['report_metadata_org_name']) . '">' . h($orgname['report_metadata_org_name']) . '</a>';
+		}
+		echo $orgnameList;
+	} else {
+		echo h($_GET['report_metadata_org_name']);
+	}
+
+	$domainCount = 0;
+	$domainList = '';
+	while ($domain = $domains->fetchArray()) {
+		if (!empty($domainList)) {
+			$domainList .= ' / ';
+		}
+		$domainList .= '<a href="' . $current . 'policy_published_domain=' . h($domain['policy_published_domain']) . '">' . h($domain['policy_published_domain']) . '</a>';
+		$domainCount++;
+	}
+	if ($domainCount > 1) {
+		echo '<br />メール送信ドメインによる絞り込み : ';
+		if (empty($_GET['policy_published_domain'])) {
+			echo $domainList;
+		} else {
+			echo h($_GET['policy_published_domain']);
+		}
+	}
+
+	echo '<br />判定結果による絞り込み : ';
+	if (empty($_GET['policy_evaluated'])) {
+		echo '<a href="' . $current . 'policy_evaluated=pass">"pass" を含む</a>';
+		echo ' / <a href="' . $current . 'policy_evaluated=fail">"fail" のみ</a>';
+	} else {
+		if ($_GET['policy_evaluated'] == 'pass') {
+			echo '"pass" を含む';
+		} else if ($_GET['policy_evaluated'] = 'fail') {
+			echo '"fail" のみ';
+		}
+	}
+
+	if (!empty($mysourceips)) {
+		echo '<br />送信元IPアドレスによる絞り込み : ';
+		if (empty($_GET['source_ip'])) {
+			echo '<a href="' . $current . 'source_ip=mine">わたしのIPアドレス</a>';
+		} else if ($_GET['source_ip'] == 'mine') {
+			echo 'わたしのIPアドレス';
+		}
+	}
+
+	if ($current != './?') {
+		echo '<br /><a href="./">絞り込み解除</a>';
+	}
+?>
+<br />
 
 <br />
 
