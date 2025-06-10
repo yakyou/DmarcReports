@@ -98,7 +98,7 @@ if (!empty($xmlstr)) {
 }
 
 //処理済みか確認する
-$reportsCount = $db->query("SELECT COUNT(*) FROM reports WHERE report_metadata_org_name = '" . $db->escapeString($report['report_metadata_org_name']) . "' AND report_metadata_report_id = '" . $db->escapeString($report['report_metadata_report_id']) . "'");
+$reportsCount = $db->query("SELECT COUNT(*) FROM reports WHERE report_metadata_email = '" . $db->escapeString($report['report_metadata_email']) . "' AND report_metadata_report_id = '" . $db->escapeString($report['report_metadata_report_id']) . "'");
 while ($count = $reportsCount->fetchArray()) {
 	if ($count[0] > 0) {
 		//処理済み
@@ -175,8 +175,8 @@ if (!$db->exec($sql)) {
 foreach ($reportRecords as $num => $reportRecord) {
 	$reportRecordsCols = '';
 	$reportRecordsVals = '';
-	$reportRecordsCols .= 'report_metadata_org_name';
-	$reportRecordsVals .= "'" . $db->escapeString($report['report_metadata_org_name']) . "'";
+	$reportRecordsCols .= 'report_metadata_email';
+	$reportRecordsVals .= "'" . $db->escapeString($report['report_metadata_email']) . "'";
 	$reportRecordsCols .= ', ';
 	$reportRecordsVals .= ', ';
 	$reportRecordsCols .= 'report_metadata_report_id';

@@ -56,7 +56,7 @@ $deleteDomain = '';
 if (!empty($deleteDomain)) {
 	$db->exec('begin');
 	$deleteTargets = $db->query('
-		SELECT reports.report_metadata_org_name, reports.report_metadata_report_id 
+		SELECT reports.report_metadata_email, reports.report_metadata_report_id 
 		FROM reports 
 		WHERE reports.policy_published_domain = \'' . $db->escapeString($deleteDomain) . '\' 
 		ORDER BY reports.report_metadata_report_id
@@ -64,7 +64,7 @@ if (!empty($deleteDomain)) {
 	while ($deleteTarget = $deleteTargets->fetchArray()) {
 		$recordsDeleteSql = '
 			DELETE FROM report_records 
-			WHERE report_metadata_org_name = \'' . $db->escapeString($deleteTarget['report_metadata_org_name']) . '\' 
+			WHERE report_metadata_email = \'' . $db->escapeString($deleteTarget['report_metadata_email']) . '\' 
 			AND report_metadata_report_id = \'' . $db->escapeString($deleteTarget['report_metadata_report_id']) . '\'
 		';
 		if (!$db->exec($recordsDeleteSql)) {
@@ -74,7 +74,7 @@ if (!empty($deleteDomain)) {
 		}
 		$reportsDeleteSql = '
 			DELETE FROM reports 
-			WHERE report_metadata_org_name = \'' . $db->escapeString($deleteTarget['report_metadata_org_name']) . '\' 
+			WHERE report_metadata_email = \'' . $db->escapeString($deleteTarget['report_metadata_email']) . '\' 
 			AND report_metadata_report_id = \'' . $db->escapeString($deleteTarget['report_metadata_report_id']) . '\'
 		';
 		if (!$db->exec($reportsDeleteSql)) {
@@ -102,7 +102,7 @@ $query1 = '
 	SELECT * 
 	FROM reports 
 	INNER JOIN report_records 
-	ON reports.report_metadata_org_name = report_records.report_metadata_org_name 
+	ON reports.report_metadata_email = report_records.report_metadata_email 
 	AND reports.report_metadata_report_id = report_records.report_metadata_report_id
 	LEFT OUTER JOIN ipinfos 
 	ON report_records.row_source_ip = ipinfos.ip 
@@ -153,7 +153,7 @@ if (!empty($queryWhere)) {
 }
 $query3 = '
 	ORDER BY reports.report_metadata_date_range_begin DESC
-	, reports.report_metadata_org_name
+	, reports.report_metadata_email
 	, reports.report_metadata_report_id
 	, ipinfos.country
 	, report_records.row_source_ip
@@ -273,7 +273,6 @@ $reports = $db->query($query1 . $query2 . $query3);
 	}
 ?>
 <br />
-
 <br />
 
 <table>
@@ -321,19 +320,19 @@ $reports = $db->query($query1 . $query2 . $query3);
 <?php 
 $recordsCount = array();
 while ($report = $reports->fetchArray()) {
-	if (empty($recordsCount[$report['report_metadata_org_name']][$report['report_metadata_report_id']])) {
-		$recordsCount[$report['report_metadata_org_name']][$report['report_metadata_report_id']] = 1;
+	if (empty($recordsCount[$report['report_metadata_email']][$report['report_metadata_report_id']])) {
+		$recordsCount[$report['report_metadata_email']][$report['report_metadata_report_id']] = 1;
 	} else {
-		$recordsCount[$report['report_metadata_org_name']][$report['report_metadata_report_id']]++;
+		$recordsCount[$report['report_metadata_email']][$report['report_metadata_report_id']]++;
 	}
 }
 $beforeRow = array();
-$beforeRow['report_metadata_org_name'] = '';
+$beforeRow['report_metadata_email'] = '';
 $beforeRow['report_metadata_report_id'] = '';
 while ($report = $reports->fetchArray()) {
 	echo '<tr>';
-	if (!($beforeRow['report_metadata_org_name'] == $report['report_metadata_org_name'] && $beforeRow['report_metadata_report_id'] == $report['report_metadata_report_id'])) {
-		$rowspan = $recordsCount[$report['report_metadata_org_name']][$report['report_metadata_report_id']];
+	if (!($beforeRow['report_metadata_email'] == $report['report_metadata_email'] && $beforeRow['report_metadata_report_id'] == $report['report_metadata_report_id'])) {
+		$rowspan = $recordsCount[$report['report_metadata_email']][$report['report_metadata_report_id']];
 		$orgNameTitle = 'email: ' . h($report['report_metadata_email']);
 		if (!empty($report['report_metadata_extra_contact_info'])) {
 			$orgNameTitle .= '&#13;&#10;extra_contact_info: ' . h($report['report_metadata_extra_contact_info']);
