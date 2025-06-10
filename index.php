@@ -157,6 +157,7 @@ $query3 = '
 	, reports.report_metadata_report_id
 	, ipinfos.country
 	, report_records.row_source_ip
+	, report_records.identifiers_envelope_to
 	, report_records.num
 ';
 $reports = $db->query($query1 . $query2 . $query3);
