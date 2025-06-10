@@ -51,6 +51,41 @@ function code2flag($countryCode) {
 	return $countryCode;
 }
 
+//特定のドメインに関する記録を消したい
+$deleteDomain = '';
+if (!empty($deleteDomain)) {
+	$db->exec('begin');
+	$deleteTargets = $db->query('
+		SELECT reports.report_metadata_org_name, reports.report_metadata_report_id 
+		FROM reports 
+		WHERE reports.policy_published_domain = \'' . $db->escapeString($deleteDomain) . '\' 
+		ORDER BY reports.report_metadata_report_id
+	');
+	while ($deleteTarget = $deleteTargets->fetchArray()) {
+		$recordsDeleteSql = '
+			DELETE FROM report_records 
+			WHERE report_metadata_org_name = \'' . $db->escapeString($deleteTarget['report_metadata_org_name']) . '\' 
+			AND report_metadata_report_id = \'' . $db->escapeString($deleteTarget['report_metadata_report_id']) . '\'
+		';
+		if (!$db->exec($recordsDeleteSql)) {
+			$db->exec('rollback');
+			echo '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>DB(report_records)の削除に失敗しました。</body></html>';
+			exit;
+		}
+		$reportsDeleteSql = '
+			DELETE FROM reports 
+			WHERE report_metadata_org_name = \'' . $db->escapeString($deleteTarget['report_metadata_org_name']) . '\' 
+			AND report_metadata_report_id = \'' . $db->escapeString($deleteTarget['report_metadata_report_id']) . '\'
+		';
+		if (!$db->exec($reportsDeleteSql)) {
+			$db->exec('rollback');
+			echo '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>DB(reports)の削除に失敗しました。</body></html>';
+			exit;
+		}
+	}
+	$db->exec('commit');
+}
+
 $domains = $db->query('
 	SELECT DISTINCT reports.policy_published_domain
 	FROM reports 
